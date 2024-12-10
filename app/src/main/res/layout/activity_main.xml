@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- 앨범 이미지 -->
+    <ImageView
+        android:id="@+id/albumImage"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_gravity="center"
+        android:src="@drawable/img"
+        android:scaleType="centerCrop" />
+
+    <!-- 트랙 제목 -->
+    <TextView
+        android:id="@+id/trackTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp"
+        android:text="APT."
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <!-- 아티스트 이름 -->
+    <TextView
+        android:id="@+id/artistName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="8dp"
+        android:text="Artist Name"
+        android:textSize="14sp" />
+
+    <!-- 재생 위치 SeekBar -->
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" />
+
+    <!-- 재생 시간 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp"
+        android:weightSum="1">
+
+        <TextView
+            android:id="@+id/currentTime"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:gravity="start"
+            android:text="00:00" />
+
+        <TextView
+            android:id="@+id/totalTime"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:gravity="end"
+            android:text="03:45" />
+    </LinearLayout>
+
+    <!-- 플레이어 컨트롤 버튼 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/playPauseButton"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:src="@drawable/ic_play"
+            android:contentDescription="Play/Pause"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp" />
+
+        <TextView
+            android:id="@+id/tempoTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:padding="16dp"
+            android:text="Tempo: 0 BPM"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/metronomeCountTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Count: 0"
+            android:textSize="16sp"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp" />
+    </LinearLayout>
+</LinearLayout>
