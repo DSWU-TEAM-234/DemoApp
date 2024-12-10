@@ -18,15 +18,27 @@ import android.widget.ImageButton
 import android.widget.Toast
 import android.widget.TextView
 
-
 import android.media.SoundPool
 import kotlinx.coroutines.*
 import java.util.Timer
 
 
+//자이로센서 코드
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.widget.Button
+import androidx.activity.ComponentActivity
 
 
-class MainActivity : AppCompatActivity() {
+
+
+
+
+
+class MainActivity : AppCompatActivity(), SensorEventListener  {
 
     private val CLIENT_ID = "c94d8d8ac11940508342148aaacf3636"
     private val REDIRECT_URI = "temrunapitest://callback"
@@ -51,6 +63,21 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var metronomeManager: MetronomeManager
     private lateinit var spotifyApiClient:SpotifyApiClient
+    private lateinit var syncManager: SyncManager
+
+
+
+    //아래는 자이로센서코드
+
+    private lateinit var sensorManager: SensorManager
+    private var gyroSensor: Sensor? = null
+
+    // 계산용 변수
+    private var lastTimestamp: Long = 0
+    private var stepCount: Int = 0
+
+    private lateinit var stepCountText: TextView
+    private lateinit var logText: TextView
 
 
 
@@ -94,10 +121,12 @@ class MainActivity : AppCompatActivity() {
             if (isPlaying) {
                 // 일시정지 상태로 변경
                 pausePlayback()
+                metronomeManager.stopMetronome()
                 playPauseButton.setImageResource(R.drawable.ic_play) // 재생 아이콘으로 변경
             } else {
                 // 재생 상태로 변경
                 resumePlayback()
+
                 playPauseButton.setImageResource(R.drawable.ic_pause) // 일시정지 아이콘으로 변경
             }
 
@@ -106,11 +135,46 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-
+        //메트로놈 init
         initializeSound()
-        metronomeManager = MetronomeManager(soundPool, soundId)
+        val countTextView: TextView = findViewById(R.id.metronomeCountTextView)
+        metronomeManager = MetronomeManager(soundPool, soundId, countTextView)
+
+        syncManager = SyncManager(this)
+
+        metronomeManager.setOnCountUpdateListener {
+            syncManager.updateMetronomeCount()
+            Log.d("MainActivity", "Metronome count updated")
+        }
 
 
+
+        //자이로센서
+        // UI 요소 초기화
+        stepCountText = findViewById(R.id.stepCountText)
+        logText = findViewById(R.id.logText)
+
+        // 자이로스코프는 기기의 x, y, z축을 중심으로 회전 속도를 rad/s 단위로 측정합니다.
+        // 기본 자이로스코프의 인스턴스를 가져오는 방법을 나타냅니다.
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+        //stepCountSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+
+        if (gyroSensor == null) {
+            Log.e("Gyroseneor", "자이로센서 사용 불가")
+            logText.text = "자이로센서 사용 불가"
+        } else {
+            logText.text = "자이로센서 초기화 성공!"
+        }
+
+        stepCountText.text = "아직 측정되지 않았습니다. "
+
+        findViewById<Button>(R.id.button).setOnClickListener {
+            stepCount = 0
+            stepCountText.text = "Steps: $stepCount" // 화면에 초기화된 값 반영
+            logText.text = "걸음 수 초기화됨."
+            Log.d("Reset", "Step count reset to 0")
+        }
 
 
 
@@ -239,6 +303,23 @@ class MainActivity : AppCompatActivity() {
         soundPool.release() // SoundPool 해제
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        // 센서 등록
+        gyroSensor.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+        }
+    }
+
+    // 얘네가 왜 있는가? 꼭 필요한 것인가? 이유를 찾자
+    override fun onPause() {
+        super.onPause()
+
+        // 센서 해제
+        sensorManager.unregisterListener(this)
+    }
+
     // Spotify 설치 여부 확인
     private fun isSpotifyInstalled(): Boolean {
         val packageManager = packageManager
@@ -285,7 +366,8 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 // 템포 결과 나온 후에 플레이 & 템포 플레이
-                startPlaybackWithMetronome(tempo)
+                //startPlaybackWithMetronome(tempo)
+                metronomeManager.startMetronome(tempo)
 
             } else {
                 Log.e("TrackFeatures", "Failed to fetch track audio features")
@@ -334,4 +416,63 @@ class MainActivity : AppCompatActivity() {
 
 
 
+    override fun onSensorChanged(p0: SensorEvent?) {
+        if (p0?.sensor?.type == Sensor.TYPE_GYROSCOPE) {
+            val angularSpeedX = p0.values[0] // X축 회전 속도
+            val angularSpeedY = p0.values[1] // Y축 회전 속도
+            val angularSpeedZ = p0.values[2]; // Z축 회전 속도
+
+            val currentTime = System.currentTimeMillis()
+
+//            // 회전 속도를 기준으로 걸음 판단
+//            if (Math.abs(angularSpeedZ) > 2.0) {
+//                if (lastTimestamp == 0L || currentTime - lastTimestamp > 500) { // 500ms이상 간격
+//                    stepCount++
+//                    lastTimestamp = currentTime
+//
+//                    stepCountText.text = "Steps: $stepCount"
+//                    logText.text = "걸음 감지 -> ${currentTime}ms"
+//                }
+//            }
+
+            if (Math.abs(angularSpeedZ) > 4.0 &&
+                Math.abs(angularSpeedX) < 2.0 &&
+                Math.abs(angularSpeedY) < 2.0 ) {
+
+                // 걸음 간격이 적절한지 확인 (0.5초 이상)
+                if (lastTimestamp == 0L || currentTime - lastTimestamp > 350) {
+                    stepCount++
+                    lastTimestamp = currentTime
+
+                    //케이던스 피드백
+                    syncManager.updateGyroSensorCount()
+
+                    // UI 업데이트
+                    stepCountText.text = "Steps: $stepCount"
+                    logText.text = "걸음 감지 -> $currentTime ms"
+                }
+            }
+        }
+
+
+//        if (p0?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
+//            val totalSteps = p0.values[0]
+//
+//            // 초기 값을 설정하여 보정
+//            if (initialStepCount == -1f) {
+//                initialStepCount = totalSteps
+//            }
+//
+//            // 현재 걸음 수 계산
+//            currentSteps = (totalSteps - initialStepCount).toInt()
+//
+//            // UI 업데이트
+//            stepCountText.text = "Steps: 테스트입니다"
+//            logText.text = "걸음 수 업데이트: $currentSteps"
+//        }
+
+    }
+    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+        Log.d("Sensor", "Accuracy changed")
+    }
 }

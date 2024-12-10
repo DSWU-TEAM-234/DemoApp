@@ -7,7 +7,7 @@ import android.util.Log
 class SpotifyApiClient(private val accessToken: String) {
 
     private val client = OkHttpClient()
-    private val token ="BQBmoaMMQoFBy4lQVH1Aaij6Ev0dHw5Mp8qRfS2aGfLiDZtEY2ARIoSeFweNWuYNR_kqlxxDz8KPg2Xk71RsSLwE2jyGTFGZWJ1ee8g_WxvdVE9hDVR33VLBS_dE1uE3P-ekkh5D6kG4A5FS5qkM2U57dQLhu-vKmuwZZ74vN5W19FxwqCgEg0-g1xKd5H_V42UzxFJ4KYVN5-1aUUGj4V6l0K3W-qAMdPuZYWNW"
+    private val token ="BQBfKa8HEWQgncHD40IjNzW-kGRC0hVjvxaMNJiOFrNwlvTibPcheeO1rTWNtWROJI-Xz0RHwcfXJ9bWAMREUA2Y2vva-VoijwJYq_rvzwCskNLL0j2LwvVmNbkIoGw0ZWsbipajNSDj_YHSkmqr-PmSLG-Xa8M759xissjXJ8wh6yWidcs8j6mM_iZsPyp9TmxDJbRUs79zJfPs7CG2qp52JkUjwibY6IWcNdR_"
 
     fun fetchTrackAudioFeatures(query: String, callback: (JSONObject?) -> Unit) {
         searchTrack(query) { trackId ->

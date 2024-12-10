@@ -10,6 +10,7 @@ import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import com.example.apitest2.R
 
 class MainActivity : ComponentActivity(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
